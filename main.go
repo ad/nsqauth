@@ -44,7 +44,8 @@ type Authorization struct {
 
 // Identity.
 type Identity struct {
-	Username       string
+	UUID           string
+	Secret         string
 	Authorizations []Authorization
 }
 
@@ -110,16 +111,20 @@ func main() {
 
 		logger.Debug("auth request:", secret)
 
-		var auths []Authorization
+		var (
+			auths []Authorization
+			uuid  string
+		)
 
 		if useDB {
-			if secrets, err := db.GetSecretsInfo(clickhouse.Secret{UUID: secret}); err != nil {
+			if secrets, err := db.GetSecretsInfo(clickhouse.Secret{Secret: secret}); err != nil {
 				logger.Error("secret", secret, err)
 				w.WriteHeader(http.StatusForbidden)
 
 				return
 			} else {
 				for _, sec := range secrets {
+					uuid = sec.UUID
 					auths = append(auths, Authorization{Topic: sec.Topic, Channels: strings.Split(sec.Channels, ";"), Permissions: strings.Split(sec.Permissions, ";")})
 				}
 			}
@@ -142,7 +147,7 @@ func main() {
 		}{
 			TTL:            ttl,
 			Authorizations: auths,
-			Identity:       secret,
+			Identity:       uuid,
 			IdentityURL:    fmt.Sprintf("http://%s/secret", addr),
 		}
 
@@ -188,7 +193,7 @@ func ParseIdentity(db string) (Identities, error) {
 			break
 		}
 
-		if len(line) < 4 {
+		if len(line) < 5 {
 			logger.Error("error parse indentity:", line)
 
 			continue
@@ -198,19 +203,20 @@ func ParseIdentity(db string) (Identities, error) {
 			continue
 		}
 
-		secret := line[0]
+		uuid := line[0]
+		secret := line[1]
 
 		authorization := Authorization{
-			Topic:       line[1],
-			Channels:    strings.Split(line[2], ";"),
-			Permissions: strings.Split(line[3], ";"),
+			Topic:       line[2],
+			Channels:    strings.Split(line[3], ";"),
+			Permissions: strings.Split(line[4], ";"),
 		}
 
 		if _, ok := identities[secret]; ok {
 			identities[secret].Authorizations = append(identities[secret].Authorizations, authorization)
 		} else {
 			identities[secret] = &Identity{
-				Username:       secret,
+				UUID:           uuid,
 				Authorizations: []Authorization{authorization},
 			}
 		}
@@ -242,7 +248,7 @@ func (s *Session) Get(secret string) (*Identity, error) {
 
 // Set session.
 func (s *Session) Set(identity *Identity) string {
-	secret := identity.Username // uuid.NewString()
+	secret := identity.Secret // uuid.NewString()
 
 	s.mux.Lock()
 	s.secrets[secret] = identity

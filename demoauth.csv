@@ -1,4 +1,4 @@
-secret,topic,channels,permissions
-"85e0044b-3c11-4604-a826-42648f1ca8bc","^service$",".*","publish"
-"fb981c43-9389-4c5f-9319-9bac1356cf14","^results$",".*","subscribe;publish"
-"fb981c43-9389-4c5f-9319-9bac1356cf14","^service$",".*","subscribe"
+uuid,secret,topic,channels,permissions
+"85e0044b-3c11-4604-a826-42648f1ca8bc","85e0044b-3c11-4604-a826-42648f1ca8bc","^service$",".*","publish"
+"fb981c43-9389-4c5f-9319-9bac1356cf14","fb981c43-9389-4c5f-9319-9bac1356cf14","^results$",".*","subscribe;publish"
+"fb981c43-9389-4c5f-9319-9bac1356cf14","fb981c43-9389-4c5f-9319-9bac1356cf14","^service$",".*","subscribe"

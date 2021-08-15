@@ -17,6 +17,7 @@ type DB struct {
 // Secret ...
 type Secret struct {
 	UUID        string
+	Secret      string
 	Topic       string
 	Channels    string
 	Permissions string
@@ -69,12 +70,13 @@ func (db *DB) AddSecret(secret Secret) (err error) {
 		return err
 	}
 
-	stmt, _ := tx.Prepare("INSERT INTO ? (uuid, topic, channels, permissions, created) VALUES (?, ?, ?, ?, ?)")
+	stmt, _ := tx.Prepare("INSERT INTO ? (uuid, secret, topic, channels, permissions, created) VALUES (?, ?, ?, ?, ?, ?)")
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(
 		db.table,
 		secret.UUID,
+		secret.Secret,
 		secret.Topic,
 		secret.Channels,
 		secret.Permissions,
@@ -91,15 +93,16 @@ func (db *DB) GetSecretsInfo(secret Secret) (secrets []Secret, err error) {
 	rows, err := db.db.Query(`
 SELECT
 	uuid,
+	secret,
 	topic,
 	channels,
 	permissions
 FROM
 	?
 WHERE
-	uuid = ?;`,
+	secret = ?;`,
 		db.table,
-		secret.UUID,
+		secret.Secret,
 	)
 	if err != nil {
 		return secrets, err

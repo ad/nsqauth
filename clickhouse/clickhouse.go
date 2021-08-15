@@ -10,8 +10,8 @@ import (
 )
 
 type DB struct {
-	db    *sql.DB
-	table string
+	DB    *sql.DB
+	Table string
 }
 
 // Secret ...
@@ -28,7 +28,7 @@ type Secret struct {
 func InitClickhouse(dsn, table string) (db *DB, err error) {
 	var attempts = 60
 
-	db = &DB{table: table}
+	db = &DB{Table: table}
 
 	connect, err := sql.Open("clickhouse", dsn)
 	if err != nil {
@@ -58,23 +58,31 @@ func InitClickhouse(dsn, table string) (db *DB, err error) {
 		time.Sleep(time.Second)
 	}
 
-	db.db = connect
+	db.DB = connect
 
 	return db, nil
 }
 
 // AddSecret ...
 func (db *DB) AddSecret(secret Secret) (err error) {
-	tx, err := db.db.Begin()
+	tx, err := db.DB.Begin()
 	if err != nil {
 		return err
 	}
 
-	stmt, _ := tx.Prepare("INSERT INTO ? (uuid, secret, topic, channels, permissions, created) VALUES (?, ?, ?, ?, ?, ?)")
+	stmt, _ := tx.Prepare(
+		fmt.Sprintf(
+			`INSERT INTO
+	%s
+(uuid, secret, topic, channels, permissions, created)
+	VALUES
+(?, ?, ?, ?, ?, ?)`,
+			db.Table,
+		),
+	)
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(
-		db.table,
 		secret.UUID,
 		secret.Secret,
 		secret.Topic,
@@ -90,18 +98,20 @@ func (db *DB) AddSecret(secret Secret) (err error) {
 
 // GetSecretsInfo ...
 func (db *DB) GetSecretsInfo(secret Secret) (secrets []Secret, err error) {
-	rows, err := db.db.Query(`
-SELECT
+	rows, err := db.DB.Query(
+		fmt.Sprintf(
+			`SELECT
 	uuid,
 	secret,
 	topic,
 	channels,
 	permissions
 FROM
-	?
+	%s
 WHERE
 	secret = ?;`,
-		db.table,
+			db.Table,
+		),
 		secret.Secret,
 	)
 	if err != nil {

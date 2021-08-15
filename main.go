@@ -18,6 +18,8 @@ import (
 )
 
 var (
+	version = "development"
+
 	addr  = ":7755"
 	useDB bool
 
@@ -25,7 +27,7 @@ var (
 
 	db      *clickhouse.DB
 	dbAddr  string
-	dbTable string
+	dbTable = "secrets"
 
 	ttl = 3600
 
@@ -118,7 +120,7 @@ func main() {
 
 		if useDB {
 			if secrets, err := db.GetSecretsInfo(clickhouse.Secret{Secret: secret}); err != nil {
-				logger.Error("secret", secret, err)
+				logger.Error("get secret error", err, "for secret", secret)
 				w.WriteHeader(http.StatusForbidden)
 
 				return
@@ -161,7 +163,7 @@ func main() {
 		}
 	})
 
-	logger.Info("starting nsqauth on address", addr)
+	logger.Info("starting nsqauth, version", version, "on address", addr)
 
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		logger.Error(err)

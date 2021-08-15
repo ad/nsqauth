@@ -9,6 +9,11 @@ import (
 	"github.com/ClickHouse/clickhouse-go"
 )
 
+type DB struct {
+	db    *sql.DB
+	table string
+}
+
 // Secret ...
 type Secret struct {
 	UUID        string
@@ -19,12 +24,14 @@ type Secret struct {
 }
 
 // InitClickhouse ...
-func InitClickhouse(dsn string) (db *sql.DB, err error) {
+func InitClickhouse(dsn, table string) (db *DB, err error) {
 	var attempts = 60
+
+	db = &DB{table: table}
 
 	connect, err := sql.Open("clickhouse", dsn)
 	if err != nil {
-		return nil, err
+		return db, err
 	}
 
 	for {
@@ -50,20 +57,23 @@ func InitClickhouse(dsn string) (db *sql.DB, err error) {
 		time.Sleep(time.Second)
 	}
 
-	return connect, nil
+	db.db = connect
+
+	return db, nil
 }
 
 // AddSecret ...
-func AddSecret(db *sql.DB, secret Secret) (err error) {
-	tx, err := db.Begin()
+func (db *DB) AddSecret(secret Secret) (err error) {
+	tx, err := db.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	stmt, _ := tx.Prepare("INSERT INTO ipmn.secrets (uuid, topic, channels, permissions, created) VALUES (?, ?, ?, ?, ?)")
+	stmt, _ := tx.Prepare("INSERT INTO ? (uuid, topic, channels, permissions, created) VALUES (?, ?, ?, ?, ?)")
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(
+		db.table,
 		secret.UUID,
 		secret.Topic,
 		secret.Channels,
@@ -77,17 +87,20 @@ func AddSecret(db *sql.DB, secret Secret) (err error) {
 }
 
 // GetSecretsInfo ...
-func GetSecretsInfo(db *sql.DB, secret Secret) (secrets []Secret, err error) {
-	rows, err := db.Query(`
+func (db *DB) GetSecretsInfo(secret Secret) (secrets []Secret, err error) {
+	rows, err := db.db.Query(`
 SELECT
 	uuid,
 	topic,
 	channels,
 	permissions
 FROM
-	ipmn.secrets
+	?
 WHERE
-	uuid = ?;`, secret.UUID)
+	uuid = ?;`,
+		db.table,
+		secret.UUID,
+	)
 	if err != nil {
 		return secrets, err
 	}

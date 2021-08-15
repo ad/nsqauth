@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/csv"
 	"encoding/json"
 	"flag"
@@ -24,8 +23,9 @@ var (
 
 	file string
 
-	db     *sql.DB
-	dbAddr string
+	db      *clickhouse.DB
+	dbAddr  string
+	dbTable string
 
 	ttl = 3600
 
@@ -61,6 +61,7 @@ func main() {
 	flag.StringVar(&addr, "addr", LookupEnvOrString("ADDR", addr), "listen addr")
 	flag.StringVar(&file, "file", LookupEnvOrString("FILE", file), "identity csv file")
 	flag.StringVar(&dbAddr, "db", LookupEnvOrString("DB", dbAddr), "db address")
+	flag.StringVar(&dbTable, "dbtable", LookupEnvOrString("DBTABLE", dbTable), "db table name")
 	flag.IntVar(&ttl, "ttl", LookupEnvOrInt("TTL", ttl), "ttl in seconds")
 	flag.Parse()
 
@@ -88,7 +89,7 @@ func main() {
 			_ = sess.Set(identity)
 		}
 	} else {
-		db, err = clickhouse.InitClickhouse(dbAddr)
+		db, err = clickhouse.InitClickhouse(dbAddr, dbTable)
 		if err != nil {
 			logger.Error(err)
 			os.Exit(1)
@@ -112,7 +113,7 @@ func main() {
 		var auths []Authorization
 
 		if useDB {
-			if secrets, err := clickhouse.GetSecretsInfo(db, clickhouse.Secret{UUID: secret}); err != nil {
+			if secrets, err := db.GetSecretsInfo(clickhouse.Secret{UUID: secret}); err != nil {
 				logger.Error("secret", secret, err)
 				w.WriteHeader(http.StatusForbidden)
 

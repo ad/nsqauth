@@ -123,7 +123,7 @@ WHERE
 	for rows.Next() {
 		var secret Secret
 
-		if err := rows.Scan(&secret.UUID, &secret.Topic, &secret.Channels, &secret.Permissions); err != nil {
+		if err := rows.Scan(&secret.UUID, &secret.Secret, &secret.Topic, &secret.Channels, &secret.Permissions); err != nil {
 			return secrets, err
 		}
 
@@ -135,7 +135,7 @@ WHERE
 	}
 
 	if len(secrets) == 0 {
-		return secrets, fmt.Errorf("%s", "secrets not found")
+		return secrets, fmt.Errorf("%s", "secret not found")
 	}
 
 	return secrets, nil

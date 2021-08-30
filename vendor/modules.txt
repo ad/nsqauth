@@ -1,5 +1,5 @@
 # github.com/ClickHouse/clickhouse-go v1.4.5
-## explicit
+## explicit; go 1.12
 github.com/ClickHouse/clickhouse-go
 github.com/ClickHouse/clickhouse-go/lib/binary
 github.com/ClickHouse/clickhouse-go/lib/cityhash102
@@ -17,4 +17,5 @@ github.com/alexcesaro/log/buflog
 github.com/alexcesaro/log/golog
 github.com/alexcesaro/log/stdlog
 # github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
+## explicit
 github.com/cloudflare/golz4

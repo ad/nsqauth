@@ -75,6 +75,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	logger.Infof("starting nsqauth-%s", version)
+
 	if file == "" {
 		useDB = true
 	}
@@ -163,7 +165,7 @@ func main() {
 		}
 	})
 
-	logger.Info("starting nsqauth, version", version, "on address", addr)
+	logger.Infof("started on address %s", addr)
 
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		logger.Error(err)

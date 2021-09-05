@@ -1,10 +1,9 @@
-FROM golang:1.16.6-alpine as builder
+FROM golang:1.17-alpine as builder
 
 ENV USER=appuser
 ENV UID=10001
 
 ENV GOOS=linux
-ENV GOARCH=amd64
 ENV CGO_ENABLED=0
 
 RUN adduser \

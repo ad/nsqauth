@@ -1,0 +1,8 @@
+Dockerfile
+Dockerfile-dev
+LICENSE
+Readme.md
+Makefile
+.gitignore
+.dockerignore
+.golangci.yml

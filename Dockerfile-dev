@@ -1,0 +1,12 @@
+FROM golang:1.17-alpine as builder
+
+ENV GOOS=linux
+ENV CGO_ENABLED=0
+
+RUN go install github.com/mitranim/gow@latest
+
+WORKDIR /app
+
+ARG VER
+
+ENTRYPOINT gow -c -e=go,mod,csv run .
